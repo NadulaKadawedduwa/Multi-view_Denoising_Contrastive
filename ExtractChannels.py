@@ -25,8 +25,11 @@ for index, folder in enumerate(folders_sorted):
     raw_array = raw_data.reshape((3040, 4032))
     raw_array_list.append(raw_array)
     R_channel = raw_array[::2, ::2]  # Select every other pixel starting from the top-left
-    G_channel = raw_array[::2, 1::2] # Select every other pixel starting from the second pixel in the first row
-    B_channel = raw_array[1::2, 1::2]# Select every other pixel starting from the second pixel in the second row
+    G_channel1 = raw_array[::2, 1::2]  # Select every other pixel starting from the second pixel in the first row
+    G_channel2 = raw_array[1::2, ::2]  # Select every other pixel starting from the second pixel in the second row  B_channel = raw_array[1::2, 1::2]# Select every other pixel starting from the second pixel in the second row
+    B_channel = raw_array[1::2, 1::2] # Select every other pixel starting from the second pixel in the second row
+    G_channel = (G_channel1 + G_channel2) / 2
+
     R_channel_list.append(R_channel)
     G_channel_list.append(G_channel)
     B_channel_list.append(B_channel)
