@@ -1,6 +1,7 @@
 import numpy as np
 import imageio
 import os
+import re
 
 # get folder names and sort 
 current_directory = os.getcwd()
