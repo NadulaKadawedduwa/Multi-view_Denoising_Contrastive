@@ -4,6 +4,8 @@ import os
 import re
 
 # get folder names and sort 
+# current_directory is expected to be in the folder with all datasets
+# ['ColorCheckerExp39062', 'ColorCheckerExp156250', 'ColorCheckerExp625000', 'ColorCheckerExp2500000', 'ColorCheckerExp10000000', 'ColorCheckerExp40000000_1', 'ColorCheckerExp40000000_2', 'ColorCheckerExp40000000_3', 'ColorCheckerExp40000000_4', 'ColorCheckerExp40000000_5', 'ColorCheckerExp40000000_6', 'ColorCheckerExp40000000_7', 'ColorCheckerExp40000000_8', 'ColorCheckerExp40000000_9', 'ColorCheckerExp40000000_10']
 current_directory = os.getcwd()
 items = os.listdir(current_directory)
 folders = [item for item in items if os.path.isdir(os.path.join(current_directory, item)) and re.match(r'^ColorCheckerExp\d+(?:_\d+)?$', item)]
@@ -40,3 +42,12 @@ for index, folder in enumerate(folders_sorted):
     # imageio.imwrite('ExtractedChannelImages\\' + folder + '_Blue.png', B_channel.astype(np.uint16), compression='png', compression_level=0)
 
 
+GT_R_channel = np.zeros_like(R_channel_list[0], dtype=np.float64)
+GT_G_channel = np.zeros_like(G_channel_list[0], dtype=np.float64)
+GT_B_channel = np.zeros_like(B_channel_list[0], dtype=np.float64)
+
+# 5-15 are the 10x ColorCheckerExp40000000 measurements
+for i in range(5,15):
+    GT_R_channel += R_channel_list[i] / 10.0
+    GT_G_channel += G_channel_list[i] / 10.0
+    GT_B_channel += B_channel_list[i] / 10.0
