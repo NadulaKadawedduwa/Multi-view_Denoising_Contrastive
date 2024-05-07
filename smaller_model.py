@@ -36,7 +36,7 @@ class UNet(nn.Module):
         self.conv13 = nn.Conv2d(128, 64, 3, padding=1)
         self.conv14 = nn.Conv2d(64, 64, 3, padding=1)
         
-        self.conv15 = nn.Conv2d(64, 1, 1)  # Output 1 channels for single denoised image
+        self.conv15 = nn.Conv2d(64, 2, 1)  # Output 1 channels for single denoised image
 
     def forward(self, x):
         # Encoder
