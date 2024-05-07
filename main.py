@@ -63,6 +63,7 @@ if __name__ == "__main__":
         os.environ["MASTER_ADDR"] = "localhost"
         os.environ["MASTER_PORT"] = "29500"
         world_size = torch.cuda.device_count()
+        print(f'World size: {world_size}')
         mp.spawn(train, args=(world_size, args, ), nprocs=world_size, join=True)
     else:
         train_cpu()
