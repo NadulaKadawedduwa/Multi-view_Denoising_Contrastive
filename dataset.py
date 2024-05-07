@@ -5,10 +5,13 @@ import numpy as np
 import torch
 
 class CustomDataset(Dataset):
-    def __init__(self, img_list_file='/mnt/data/ILSVRC/Data/train_img_paths.txt', transforms=None, std=None, crop_size=224, device='cpu') -> None:
+    def __init__(self, img_list_file='/mnt/data/ILSVRC/Data/train_img_paths.txt', transforms=None, std=None, crop_size=224, device='cpu', sub_set=None) -> None:
         super().__init__()
         with open(img_list_file, 'r') as f:
             self.img_paths = f.readlines()
+        self.img_paths = [img_path.strip() for img_path in  self.img_paths]
+        if sub_set:
+            self.img_paths = self.img_paths[:sub_set]
         self.crop_size = crop_size
         self.transform = transforms or  T.Compose([
                 T.ToTensor(),
@@ -16,6 +19,7 @@ class CustomDataset(Dataset):
             ])
         self.std = std
         self.device = device
+
     
     def __add_noise__(self, img):
         std = self.std or np.random.uniform(0, 1)
