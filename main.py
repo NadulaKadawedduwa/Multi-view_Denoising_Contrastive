@@ -9,7 +9,7 @@ from smaller_model import UNet
 
 
 def train():
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
     batch_size = 32
     dataset = CustomDataset(device=device)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -20,7 +20,7 @@ def train():
     lr = 1e-3
     optim = Adam(model.parameters(), lr=lr)
     loss_fn = MSELoss()
-    log_every = 10
+    log_every = 20
 
     n_epochs = 10
 
@@ -35,8 +35,7 @@ def train():
 
             if epoch > 0 and epoch % log_every == 0:
                 print(f'Loss: {loss.item()}')
-    
-    torch.save(model.state_dict(), "model.pth")
+                torch.save(model.state_dict(), "model.pth")
 
 if __name__ == "__main__":
     train()
