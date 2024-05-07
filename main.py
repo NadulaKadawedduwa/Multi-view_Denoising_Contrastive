@@ -22,10 +22,11 @@ def train(rank, world_size, args):
     batch_size = int(args.batch_size)
     n_epochs = int(args.n_epochs)
     log_every = int(args.log_every)
+    img_list_path = args.img_list_path
 
     dist.init_process_group("gloo", rank=rank, world_size=world_size)
     
-    dataset = CustomDataset(device=rank, sub_set=sub_set)
+    dataset = CustomDataset(img_list_file=img_list_path, device=rank, sub_set=sub_set)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     model = UNet().to(device=rank)
@@ -50,6 +51,7 @@ def train(rank, world_size, args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--img-list-path")
     parser.add_argument("--subset-size", default=None)
     parser.add_argument("--batch-size", default=32)
     parser.add_argument("--n-epochs", default=50)
