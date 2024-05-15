@@ -34,9 +34,11 @@ class CustomDataset(Dataset):
         img = Image.open(img_path).convert("L")
         noisy_imgs = []
         for i in range(10):
-            noisy_imgs.append(self.transform(self.__add_noise__(img)))
+            noisy_img = self.transform(self.__add_noise__(img)).to(torch.float)
+            noisy_img = noisy_img.to(device=self.device)
+            noisy_imgs.append(noisy_img)
 
-        img = self.transform(self.__add_noise__(img))
+        img = self.transform(self.__add_noise__(img)).to(device=self.device).to(torch.float)
 
         return img, noisy_imgs
     
@@ -52,4 +54,4 @@ class CustomDataset(Dataset):
 
         # noisy = torch.cat((noisy_1, noisy_2)).to(torch.float)
         # clean = torch.cat((img_1, img_2), dim=0).to(torch.float)
-        return noisies.to(device=self.device), img.to(device=self.device)
+        return noisies, img

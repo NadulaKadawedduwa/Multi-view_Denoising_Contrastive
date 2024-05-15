@@ -4,10 +4,10 @@ from torchvision import models
 from torch.nn.functional import relu
 
 class UNet(nn.Module):
-    def __init__(self):
+    def __init__(self, input_channels=2):
         super(UNet, self).__init__()
         # Encoder
-        self.conv1 = nn.Conv2d(2, 64, 3, padding=1)
+        self.conv1 = nn.Conv2d(input_channels, 64, 3, padding=1)
         self.conv2 = nn.Conv2d(64, 64, 3, padding=1)
         self.pool1 = nn.MaxPool2d(2, 2)
         
@@ -36,7 +36,7 @@ class UNet(nn.Module):
         self.conv13 = nn.Conv2d(128, 64, 3, padding=1)
         self.conv14 = nn.Conv2d(64, 64, 3, padding=1)
         
-        self.conv15 = nn.Conv2d(64, 2, 1)  # Output 1 channels for single denoised image
+        self.conv15 = nn.Conv2d(64, input_channels, 1)
 
     def forward(self, x):
         # Encoder

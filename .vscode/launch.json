@@ -8,8 +8,8 @@
             "name": "Train",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/main.py",
-            "args": ["--subset-size", "250000", "--batch-size", "32", "--n-epochs", "50", "--log-every", "5"],
+            "program": "${workspaceFolder}/main_mod.py",
+            "args": ["--img-list-path", "./data/imagenet_files_bluestone.txt", "--subset-size", "10000", "--batch-size", "64", "--n-epochs", "50", "--log-every", "5"],
             "console": "integratedTerminal"
         }
     ]
