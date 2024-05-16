@@ -8,4 +8,4 @@ class TrainConfig:
     n_epochs: int
     log_every: int
     server_port: int
-    save_every: int
+    save_every: str

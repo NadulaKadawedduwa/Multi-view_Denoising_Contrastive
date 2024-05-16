@@ -10,4 +10,4 @@ batch_size: 32
 n_epochs: 20
 log_every: 10
 save_every: 2
-server_port: 29500
+server_port: "29500"
