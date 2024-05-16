@@ -4,3 +4,4 @@ matplotlib
 Pillow
 hydra-core
 wandb
+dotenv

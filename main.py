@@ -10,8 +10,13 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 import os
 import argparse
+import wandb
+import dotenv
 
-from omegaconf import DictConfig
+dotenv.load_dotenv(".env", override=True)
+
+
+from omegaconf import DictConfig, OmegaConf
 import hydra
 from hydra.core.config_store import ConfigStore
 
@@ -22,36 +27,31 @@ from smaller_model import UNet
 cs = ConfigStore.instance()
 cs.store(name="base_train", node=TrainConfig)
 
+
 def train_cpu():
     print("Not implemented")
 
 
-def ddp_setup(rank, world_size):
+def ddp_setup(rank, world_size, port):
     """
     Args:
         rank: Unique identifier of each process
         world_size: Total number of processes
     """
     os.environ["MASTER_ADDR"] = "localhost"
-    os.environ["MASTER_PORT"] = "29500"
+    os.environ["MASTER_PORT"] = port
     dist.init_process_group(backend="nccl", rank=rank, world_size=world_size)
     torch.cuda.set_device(rank)
 
 
-def train(rank, world_size, cfg: DictConfig):
-    sub_set = int(cfg.subset_size)
-    batch_size = int(cfg.batch_size)
-    n_epochs = int(cfg.n_epochs)
-    log_every = int(cfg.log_every)
-    img_list_path = cfg.img_list_path
-
+def train(rank, world_size, cfg: TrainConfig):
     gpu_id = rank
-    ddp_setup(gpu_id, world_size)
+    ddp_setup(gpu_id, world_size, cfg.server_port)
 
-    dataset = CustomDataset(img_list_file=img_list_path, device=gpu_id, sub_set=sub_set)
+    dataset = CustomDataset(img_list_file=cfg.img_list_path, device=gpu_id, sub_set=cfg.subset_size)
     dataloader = DataLoader(
         dataset,
-        batch_size=batch_size,
+        batch_size=cfg.batch_size,
         shuffle=False,
         sampler=DistributedSampler(dataset),
     )
@@ -63,9 +63,9 @@ def train(rank, world_size, cfg: DictConfig):
 
     loss_fn = MSELoss()
 
-    for epoch in range(n_epochs):
-        for noisy, clean in tqdm(
-            dataloader, disable=gpu_id != 0, desc=f"Epoch {epoch}/{n_epochs}"
+    for epoch in range(cfg.n_epochs):
+        for batch_n, (noisy, clean) in tqdm(
+            enumerate(dataloader), disable=gpu_id != 0, desc=f"Epoch {epoch}/{cfg.n_epochs}"
         ):
             optim.zero_grad()
             pred = model(noisy)
@@ -74,17 +74,29 @@ def train(rank, world_size, cfg: DictConfig):
             loss.backward()
             optim.step()
 
-        if epoch > 0 and epoch % log_every == 0:
-            if gpu_id == 0:
-                print(f"Loss: {loss.item()}")
-                torch.save(model.module.state_dict(), f"./checkpoints/model_{epoch}.pth")
+            if gpu_id == 0 and batch_n % cfg.log_every == 0:
+                print(f"Loss: {loss.item()} Epoch: {epoch} Batch: | {batch_n}")
     
+        if gpu_id == 0:
+            wandb.log({"epoch": epoch + 1, "loss": loss.item()})
+
+        if epoch > 0 and epoch % cfg.save_every == 0:
+            if gpu_id == 0:
+                torch.save(
+                    model.module.state_dict(), f"./checkpoints/model_{epoch}.pth"
+                )
+
     dist.destroy_process_group()
+    wandb.finish()
+
 
 @hydra.main(version_base=None, config_path="./config", config_name="train")
 def main(cfg: TrainConfig):
     print("Beginning training with config:")
     pprint(cfg)
+    wandb.init(
+        project="cmsc848b_project", config=OmegaConf.to_container(cfg, resolve=True)
+    )
     if torch.cuda.is_available():
         world_size = torch.cuda.device_count()
         print(f"World size: {world_size}")
@@ -99,7 +111,6 @@ def main(cfg: TrainConfig):
         )
     else:
         train_cpu()
-
 
 
 if __name__ == "__main__":
