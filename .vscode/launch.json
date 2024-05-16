@@ -8,7 +8,7 @@
             "name": "Train",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/main_mod.py",
+            "program": "${workspaceFolder}/main.py",
             "args": [],
             "console": "integratedTerminal"
         }
