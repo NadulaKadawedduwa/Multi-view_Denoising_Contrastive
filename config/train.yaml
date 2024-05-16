@@ -1,0 +1,11 @@
+defaults:
+  - _self_
+  - base_train
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled 
+
+img_list_path: data/imagenet_files_redstone.txt
+subset_size: 10000
+batch_size: 32
+n_epochs: 20
+log_every: 2

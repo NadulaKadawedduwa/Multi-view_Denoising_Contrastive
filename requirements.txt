@@ -1,0 +1,6 @@
+pytorch
+torchvision
+matplotlib
+Pillow
+hydra-core
+wandb

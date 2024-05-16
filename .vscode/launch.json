@@ -9,7 +9,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main_mod.py",
-            "args": ["--img-list-path", "./data/imagenet_files_bluestone.txt", "--subset-size", "10000", "--batch-size", "64", "--n-epochs", "50", "--log-every", "5"],
+            "args": [],
             "console": "integratedTerminal"
         }
     ]
