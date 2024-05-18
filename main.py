@@ -15,17 +15,16 @@ import dotenv
 
 dotenv.load_dotenv(".env", override=True)
 
-
 from omegaconf import DictConfig, OmegaConf
 import hydra
 from hydra.core.config_store import ConfigStore
 
-from config.TrainConfig import TrainConfig
+from config.config import Config
 from dataset import CustomDataset
 from smaller_model import UNet
 
 cs = ConfigStore.instance()
-cs.store(name="base_train", node=TrainConfig)
+cs.store(name="base_train", node=Config)
 
 
 def train_cpu():
@@ -44,7 +43,11 @@ def ddp_setup(rank, world_size, port):
     torch.cuda.set_device(rank)
 
 
-def train(rank, world_size, cfg: TrainConfig):
+def train(rank, world_size, cfg: Config):
+    wandb.init(
+        project="cmsc848b_project", config=OmegaConf.to_container(cfg, resolve=True)
+    )
+    
     gpu_id = rank
     ddp_setup(gpu_id, world_size, cfg.server_port)
 
@@ -64,21 +67,22 @@ def train(rank, world_size, cfg: TrainConfig):
     loss_fn = MSELoss()
 
     for epoch in range(cfg.n_epochs):
-        for batch_n, (noisy, clean) in tqdm(
-            enumerate(dataloader), disable=gpu_id != 0, desc=f"Epoch {epoch}/{cfg.n_epochs}"
+        for src, target in tqdm(
+            dataloader, disable=gpu_id != 0, desc=f"Epoch {epoch}/{cfg.n_epochs}"
         ):
             optim.zero_grad()
-            pred = model(noisy)
+            pred = model(src)
 
-            loss = loss_fn(pred, clean)
+            loss = loss_fn(pred, target)
             loss.backward()
             optim.step()
 
-            if gpu_id == 0 and batch_n % cfg.log_every == 0:
-                print(f"Loss: {loss.item()} Epoch: {epoch} Batch: | {batch_n}")
+            # if gpu_id == 0 and batch_n % cfg.log_every == 0:
+            #     print(f"Loss: {loss.item()} Epoch: {epoch} Batch: | {batch_n}")
     
         if gpu_id == 0:
             wandb.log({"epoch": epoch + 1, "loss": loss.item()})
+            print(f"Loss: {loss.item()} Epoch: {epoch}")
 
         if epoch > 0 and epoch % cfg.save_every == 0:
             if gpu_id == 0:
@@ -91,12 +95,9 @@ def train(rank, world_size, cfg: TrainConfig):
 
 
 @hydra.main(version_base=None, config_path="./config", config_name="train")
-def main(cfg: TrainConfig):
+def main(cfg: Config):
     print("Beginning training with config:")
     pprint(cfg)
-    wandb.init(
-        project="cmsc848b_project", config=OmegaConf.to_container(cfg, resolve=True)
-    )
     if torch.cuda.is_available():
         world_size = torch.cuda.device_count()
         print(f"World size: {world_size}")

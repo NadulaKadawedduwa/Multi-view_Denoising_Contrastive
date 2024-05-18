@@ -3,3 +3,4 @@ outputs
 checkpoints
 wandb
 .env
+data/imgs
